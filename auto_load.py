@@ -27,7 +27,7 @@ def register():
     for cls in ordered_classes:
         bpy.utils.register_class(cls)
         if hasattr(cls, 'bl_rna') and isinstance(cls.bl_rna.base, bpy.types.PropertyGroup):
-            bpy.types.Scene.UE4AnimTools = bpy.props.PointerProperty(type=cls, name='UE4 Animation Tools')
+            bpy.types.Object.UE4AnimTools = bpy.props.PointerProperty(type=cls, name='UE4 Animation Tools')
 
     for module in modules:
         if module.__name__ == __name__:
@@ -38,8 +38,8 @@ def register():
 def unregister():
     for cls in reversed(ordered_classes):
         bpy.utils.unregister_class(cls)
-        if hasattr(bpy.types.Scene, 'UE4AnimTools'):
-            del bpy.types.Scene.UE4AnimTools
+        if hasattr(bpy.types.Object, 'UE4AnimTools'):
+            del bpy.types.Object.UE4AnimTools
 
     for module in modules:
         if module.__name__ == __name__:
