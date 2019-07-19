@@ -7,6 +7,8 @@ import pkgutil
 import importlib
 from pathlib import Path
 
+ADDON_PROPERTY_NAME = 'UE4AnimTools'
+
 __all__ = (
     "init",
     "register",
@@ -26,8 +28,15 @@ def init():
 def register():
     for cls in ordered_classes:
         bpy.utils.register_class(cls)
-        if hasattr(cls, 'bl_rna') and isinstance(cls.bl_rna.base, bpy.types.PropertyGroup):
-            bpy.types.Object.UE4AnimTools = bpy.props.PointerProperty(type=cls, name='UE4 Animation Tools')
+        if hasattr(cls, 'bl_rna') and isinstance(cls.bl_rna.base, bpy.types.PropertyGroup) and ('_' in cls.bl_rna.name):
+            bl_type_name = cls.bl_rna.name.replace('Properties', '').split('_')[0]
+            
+            try:
+                bl_type = getattr(bpy.types, bl_type_name)
+            except Exception as e:
+                raise(e)
+
+            bl_type.UE4AnimTools = bpy.props.PointerProperty(type=cls, name='UE4 Animation Tools')
 
     for module in modules:
         if module.__name__ == __name__:
@@ -36,10 +45,19 @@ def register():
             module.register()
 
 def unregister():
+
+    for bl_type_name in dir(bpy.types):
+        bl_type = ''
+        if hasattr(bpy.types, bl_type_name):
+            bl_type = getattr(bpy.types, bl_type_name)    
+        else:
+            continue
+           
+        if hasattr(bl_type, 'UE4AnimTools'):
+            del bl_type.UE4AnimTools
+
     for cls in reversed(ordered_classes):
         bpy.utils.unregister_class(cls)
-        if hasattr(bpy.types.Object, 'UE4AnimTools'):
-            del bpy.types.Object.UE4AnimTools
 
     for module in modules:
         if module.__name__ == __name__:
