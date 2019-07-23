@@ -14,7 +14,7 @@
 bl_info = {
     "name" : "UE4 Animation Tools",
     "author" : "trefecta",
-    "description" : "",
+    "description" : "Unreal Engine 4 Animation Tools for Blender",
     "blender" : (2, 80, 0),
     "version" : (0, 0, 1),
     "location" : "",
