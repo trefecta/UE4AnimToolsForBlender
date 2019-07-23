@@ -31,12 +31,9 @@ def register():
         if hasattr(cls, 'bl_rna') and isinstance(cls.bl_rna.base, bpy.types.PropertyGroup) and ('_' in cls.bl_rna.name):
             bl_type_name = cls.bl_rna.name.replace('Properties', '').split('_')[0]
             
-            try:
+            if hasattr(bpy.types, bl_type_name):
                 bl_type = getattr(bpy.types, bl_type_name)
-            except Exception as e:
-                raise(e)
-
-            bl_type.UE4AnimTools = bpy.props.PointerProperty(type=cls, name='UE4 Animation Tools')
+                bl_type.UE4AnimTools = bpy.props.PointerProperty(type=cls, name='UE4 Animation Tools')
 
     for module in modules:
         if module.__name__ == __name__:
