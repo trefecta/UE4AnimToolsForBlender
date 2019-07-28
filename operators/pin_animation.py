@@ -21,6 +21,25 @@ class UE4ANIMTOOLS_OT_PinAnimation(bpy.types.Operator):
         return PinAnimation(context, armature).run()
 
 
+class UE4ANIMTOOLS_OT_PinBatchFBXOperator(bpy.types.Operator):
+    bl_idname = "ue4animtools.pin_batch_animation"
+    bl_label = "Apply to batch fbx armatures."
+    bl_category = 'UE4 Animation'
+    bl_description = \
+""" Imports `*.fbx` files from a specified directory, pinning them to the origin. 
+The file is saved as a `*.blend` in a `./Blender` sibling directory or an optionally specified directory, 
+exporting a new `*.fbx` to a `./UE4` sibling directory or an optionally specified directory. 
+Directories are created if they do not exist."""
+
+    @classmethod
+    def poll(cls, context):
+        batch_filepath_src = context.scene.UE4AnimTools.batch_filepath_src
+        return (Path(batch_filepath_src).exists())
+
+    def execute(self, context):
+        return PinBatchAnimation(context).run()
+
+
 class PinAnimation:
     """
         Translates armature animation from entire armature object to the `pelvis` bone, pinning armature object to origin.
@@ -165,3 +184,74 @@ class PinAnimation:
         self.update_pelvis_rotation(frame)
         self.update_pelvis_location(frame)
         self.set_armature_to_origin(frame)
+
+
+class PinBatchAnimation():
+    """ 
+        Imports  `*.fbx` files from a specified directory, pinning them to the origin.
+        The file is saved as a `*.blend` in a `./Blender` sibling directory or an optionally specified directory, 
+        exporting a new `*.fbx` to a `./UE4` sibling directory or an optionally specified directory.
+        Directories are created if they do not exist. 
+    """
+    def __init__(self, context):
+        self.batch_filepath_src = Path(context.scene.UE4AnimTools.batch_filepath_src)
+        self.batch_filepath_bln = Path(context.scene.UE4AnimTools.batch_filepath_bln or self.batch_filepath_src.parent / 'Blender').resolve()
+        self.batch_filepath_dst = Path(context.scene.UE4AnimTools.batch_filepath_dst or self.batch_filepath_src.parent / 'UE4').resolve()
+
+        self.batch_filepath_bln.mkdir(parents=True, exist_ok=True)
+        self.batch_filepath_dst.mkdir(parents=True, exist_ok=True)
+
+    def run(self):
+        for filepath in self.batch_filepath_src.glob('**/*.fbx'):
+            print('Working on {}'.format(filepath))
+            for a in bpy.data.actions:
+                bpy.data.actions.remove(a)
+
+            for a in bpy.data.armatures:
+                bpy.data.armatures.remove(a)
+
+            if list(bpy.data.objects):
+                if bpy.context.mode != 'OBJECT':
+                    # BAD HACK
+                    for _ in range(0xFFFFFF):
+                        if bpy.ops.object.mode_set.poll():
+                            break
+                    bpy.ops.object.mode_set(mode='OBJECT')
+                bpy.ops.object.delete({'selected_objects': [obj for obj in bpy.data.objects]}, use_global=True)
+            
+            bpy.ops.import_scene.fbx(
+                filepath=str(filepath),
+                automatic_bone_orientation=True,
+                axis_forward='-Y',
+                axis_up = 'Z'
+            )
+
+            armature = bpy.context.scene.objects['armature']
+
+            for child in armature.children:
+                child.hide_set(state=True)
+
+            if not armature:
+                print('Something is wrong with {}'.format(filepath))
+                break 
+
+            bpy.data.objects['armature'].select_set(state=True)
+            PinAnimation(bpy.context, armature).run()
+            
+            current_action = list(bpy.data.actions)[-1]
+
+            current_action.name = filepath.stem
+
+            bpy.ops.export_scene.fbx(
+                filepath=str(self.batch_filepath_dst / filepath.name),
+                object_types={'ARMATURE'},
+                use_selection=True,
+                use_mesh_modifiers=True,
+                add_leaf_bones=False,
+                axis_forward='-Y',
+                axis_up = 'Z'
+            )
+            
+            bpy.ops.wm.save_as_mainfile(filepath=str(self.batch_filepath_bln / (filepath.stem + '.blend')))
+
+        return {'FINISHED'}
