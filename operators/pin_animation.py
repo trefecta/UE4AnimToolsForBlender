@@ -1,25 +1,30 @@
 import bpy
 from mathutils import *
 import math, numpy as np
+from pathlib import Path
 
 from ..properties import Scene_UE4AnimToolProperties as UE4AnimToolProperties
 
 class UE4ANIMTOOLS_OT_PinAnimation(bpy.types.Operator):
     bl_idname = 'ue4animtools.pin_animation'
-    bl_label = 'Apply to Selected Armature'
-    bl_category = 'UE4|Animation'
-    bl_description = """Translates armature animation from armature to the `pelvis` bone, pinning armature object to origin."""
+    bl_label = 'Apply to selected armature'
+    bl_category = 'UE4 Animation'
+    bl_description = """Translates armature animation from entire armature object to the `pelvis` bone, pinning armature object to origin."""
 
     @classmethod
     def poll(cls, context):
         armature = context.scene.UE4AnimTools.armature
-        return (armature is not None and obj.pose is not None)
+        return (armature is not None and armature.pose is not None)
 
     def execute(self, context):
         armature = context.scene.UE4AnimTools.armature
         return PinAnimation(context, armature).run()
 
+
 class PinAnimation:
+    """
+        Translates armature animation from entire armature object to the `pelvis` bone, pinning armature object to origin.
+    """
     def __init__(self, context, armature):
         self.ctx = context
         self.initial_mode = bpy.context.object.mode
@@ -35,12 +40,6 @@ class PinAnimation:
         self.ctx.scene.frame_set(self.start_frame)
         self.ctx.scene.frame_end = self.end_frame
 
-        self.init_armature_basis = self.armature.matrix_basis.copy()
-        self.wrt_init_origin = lambda x: self.init_armature_basis @ x
-        self.wrt_init_armature = lambda x: self.init_armature_basis.inverted() @ x
-
-        self.new_obj_locs = []
-        self.new_root_locs = []
         self.new_pelvis_locs = []
         self.new_pelvis_rots = []
 
@@ -49,14 +48,9 @@ class PinAnimation:
             self.add_root_bone()
 
         self.armature.pose.bones[0].name = 'Root'
-
-        if 'hips' in self.armature.pose.bones:
-            self.armature.pose.bones['hips'].name = 'pelvis'
-         
         self.armature.pose.bones['Root'].rotation_mode = 'QUATERNION'
         self.armature.pose.bones['pelvis'].rotation_mode = 'QUATERNION'
         self.init_pelvis_loc = self.armature.pose.bones['pelvis'].matrix.copy().to_translation()
-
 
     def run(self):
         self.remove_end_bones()
@@ -138,8 +132,7 @@ class PinAnimation:
 
     def calculate_parameters(self, frame):
         pelvis_pose = self.armature.pose.bones['pelvis']
-        pelvis_bone = pelvis_pose.bone
-        pelvis_bone.select = True
+        pelvis_pose.bone.select = True
         current_armature_basis = self.armature.matrix_basis.copy()
 
         wrt_current_origin = lambda x: current_armature_basis @ x
@@ -151,10 +144,10 @@ class PinAnimation:
         # this is the offset
         pose_pelvis_loc = pelvis_pose.matrix.to_translation()
         current_pelvis_loc = wrt_current_origin(pose_pelvis_loc)
-        new_pelvis_loc = (current_pelvis_loc - pelvis_pose.matrix.to_translation() / 100)
+        new_pelvis_loc = (current_pelvis_loc - (pelvis_pose.matrix.to_translation() / self.scaling))
 
         self.new_pelvis_rots.append(new_pelvis_rot)
-        self.new_pelvis_locs.append(self.translate_vector_axes(new_pelvis_loc) * 100)
+        self.new_pelvis_locs.append(self.translate_vector_axes(new_pelvis_loc) * self.scaling)
 
     def update_pelvis_location(self, frame):
         pelvis_pose = self.armature.pose.bones['pelvis']
