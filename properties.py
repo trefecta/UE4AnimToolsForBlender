@@ -1,4 +1,5 @@
 import bpy
+from pathlib import Path
 
 class UIToggleProperties(bpy.types.PropertyGroup):
     name: bpy.props.StringProperty(name='Toggle', default='')
@@ -10,3 +11,6 @@ class WindowManager_UE4AnimToolProperties(bpy.types.PropertyGroup):
 
 class Scene_UE4AnimToolProperties(bpy.types.PropertyGroup):
     armature: bpy.props.PointerProperty(name='Armature', type=bpy.types.Object)
+    batch_filepath_src: bpy.props.StringProperty(name='Batch Filepath: Source', subtype='FILE_PATH')
+    batch_filepath_bln: bpy.props.StringProperty(name='Batch Filepath: Blender', subtype='FILE_PATH')
+    batch_filepath_dst: bpy.props.StringProperty(name='Batch Filepath: Destination', subtype='FILE_PATH')
