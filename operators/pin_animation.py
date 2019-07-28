@@ -23,7 +23,7 @@ class UE4ANIMTOOLS_OT_PinAnimation(bpy.types.Operator):
 
 class UE4ANIMTOOLS_OT_PinBatchFBXOperator(bpy.types.Operator):
     bl_idname = "ue4animtools.pin_batch_animation"
-    bl_label = "Apply to batch fbx armatures."
+    bl_label = "Apply to FBX armatures in 'Source'"
     bl_category = 'UE4 Animation'
     bl_description = \
 """ Imports `*.fbx` files from a specified directory, pinning them to the origin. 
