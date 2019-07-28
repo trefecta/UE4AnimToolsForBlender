@@ -11,10 +11,11 @@ class UE4ANIMTOOLS_PT_AnimationTools(bpy.types.Panel):
     
     def draw(self, context):
         layout = self.layout
+        scn_props = context.scene.UE4AnimTools
         wm_props = context.window_manager.UE4AnimTools
 
         colflow = layout.column_flow()
-        colflow.row().prop(context.scene.UE4AnimTools, 'armature', icon='OBJECT_DATA')
+        colflow.row().prop(scn_props, 'armature', icon='OBJECT_DATA')
 
         row = layout.row()
         row.prop(wm_props, 'pin_animation_toggle',
@@ -27,8 +28,8 @@ class UE4ANIMTOOLS_PT_AnimationTools(bpy.types.Panel):
         if wm_props.pin_animation_toggle:
             layout.row().operator('ue4animtools.pin_animation')
 
-            layout.row().prop(context.scene.UE4AnimTools, 'batch_filepath_src', text='Source Filepath')
-            layout.row().prop(context.scene.UE4AnimTools, 'batch_filepath_bln', text='Blender Filepath')
-            layout.row().prop(context.scene.UE4AnimTools, 'batch_filepath_dst', text='Destination Filepath')
+            layout.row().prop(scn_props, 'batch_filepath_src', text='Source Filepath')
+            layout.row().prop(scn_props, 'batch_filepath_bln', text='Blender Filepath')
+            layout.row().prop(scn_props, 'batch_filepath_dst', text='Destination Filepath')
 
             layout.row().operator('ue4animtools.pin_batch_animation')
