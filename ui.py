@@ -4,7 +4,7 @@ class UE4ANIMTOOLS_PT_AnimationTools(bpy.types.Panel):
     bl_label = 'UE4 Animation Tools'
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_category = 'UE4|Animation'
+    bl_category = 'UE4 Animation'
     bl_order = 1
 
     # bpy.types.WindowsManager.UE4AnimTools.ui_toggles
@@ -25,6 +25,10 @@ class UE4ANIMTOOLS_PT_AnimationTools(bpy.types.Panel):
         row.label(text='Pin Armature Animation')
 
         if wm_props.pin_animation_toggle:
-            split = layout.split()
-            row = split.row()
-            row.operator('ue4animtools.pin_animation')
+            layout.row().operator('ue4animtools.pin_animation')
+
+            layout.row().prop(context.scene.UE4AnimTools, 'batch_filepath_src', text='Source Filepath')
+            layout.row().prop(context.scene.UE4AnimTools, 'batch_filepath_bln', text='Blender Filepath')
+            layout.row().prop(context.scene.UE4AnimTools, 'batch_filepath_dst', text='Destination Filepath')
+
+            layout.row().operator('ue4animtools.pin_batch_animation')
