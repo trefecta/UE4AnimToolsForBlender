@@ -33,8 +33,8 @@ Directories are created if they do not exist."""
 
     @classmethod
     def poll(cls, context):
-        batch_filepath_src = context.scene.UE4AnimTools.batch_filepath_src
-        return (Path(batch_filepath_src).exists())
+        batch_filepath_src = Path(context.scene.UE4AnimTools.batch_filepath_src)
+        return (batch_filepath_src.exists())
 
     def execute(self, context):
         return PinBatchAnimation(context).run()
