@@ -8,6 +8,7 @@ class UIToggleProperties(bpy.types.PropertyGroup):
 class WindowManager_UE4AnimToolProperties(bpy.types.PropertyGroup):
     # ui_toggles: bpy.props.CollectionProperty(name='UI Toggles', type=UIToggleProperties)
     pin_animation_toggle: bpy.props.BoolProperty(name='Pin Animation Toggle', default=False)
+    copy_bone_roll_toggle: bpy.props.BoolProperty(name='Edit Bones Toggle', default=False)
 
 class Scene_UE4AnimToolProperties(bpy.types.PropertyGroup):
     armature: bpy.props.PointerProperty(name='Armature', type=bpy.types.Object)

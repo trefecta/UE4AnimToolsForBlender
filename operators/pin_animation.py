@@ -1,6 +1,6 @@
 import bpy
 from mathutils import *
-import math, numpy as np
+import math
 from pathlib import Path
 
 from ..properties import Scene_UE4AnimToolProperties as UE4AnimToolProperties
@@ -22,14 +22,18 @@ class UE4ANIMTOOLS_OT_PinAnimation(bpy.types.Operator):
 
 
 class UE4ANIMTOOLS_OT_PinBatchFBXOperator(bpy.types.Operator):
+
     bl_idname = "ue4animtools.pin_batch_animation"
     bl_label = "Apply to FBX armatures in 'Source'"
     bl_category = 'UE4 Animation'
-    bl_description = \
-""" Imports `*.fbx` files from a specified directory, pinning them to the origin. 
-The file is saved as a `*.blend` in a `./Blender` sibling directory or an optionally specified directory, 
-exporting a new `*.fbx` to a `./UE4` sibling directory or an optionally specified directory. 
-Directories are created if they do not exist."""
+    bl_description = """
+Imports `*.fbx` files from a specified directory, pinning the root to the origin.
+
+The file is saved as a `*.blend` in a `./Blender` sibling directory or an optionally specified directory,
+exporting a new `*.fbx` to a `./UE4` sibling directory or an optionally specified directory.
+
+Directories are created if they do not exist.
+    """
 
     @classmethod
     def poll(cls, context):
@@ -47,10 +51,10 @@ class PinAnimation:
     def __init__(self, context, armature):
         self.ctx = context
         self.initial_mode = bpy.context.object.mode
-        self.scaling = 100
+        self.scaling = 1
 
         self.armature = armature
-        self.armature.name = 'armature'
+        self.armature.name = 'Armature'
         self.armature.data.name = self.armature.name
 
         self.start_frame, self.end_frame = [int(i) for i in self.armature.animation_data.action.frame_range]
@@ -158,7 +162,7 @@ class PinAnimation:
 
         new_pelvis_rot = wrt_current_origin(pelvis_pose.matrix.copy()).to_quaternion()
         new_pelvis_rot.rotate(pelvis_pose.matrix.to_quaternion().conjugated())
-        
+
         # Get the difference between the world space and the scaled pose space
         # this is the offset
         pose_pelvis_loc = pelvis_pose.matrix.to_translation()
@@ -187,11 +191,13 @@ class PinAnimation:
 
 
 class PinBatchAnimation():
-    """ 
-        Imports  `*.fbx` files from a specified directory, pinning them to the origin.
-        The file is saved as a `*.blend` in a `./Blender` sibling directory or an optionally specified directory, 
+    """
+        Imports  `*.fbx` files from a specified directory, pinning the root to the origin.
+
+        The file is saved as a `*.blend` in a `./Blender` sibling directory or an optionally specified directory,
         exporting a new `*.fbx` to a `./UE4` sibling directory or an optionally specified directory.
-        Directories are created if they do not exist. 
+
+        Directories are created if they do not exist.
     """
     def __init__(self, context):
         self.batch_filepath_src = Path(context.scene.UE4AnimTools.batch_filepath_src)
@@ -218,26 +224,28 @@ class PinBatchAnimation():
                             break
                     bpy.ops.object.mode_set(mode='OBJECT')
                 bpy.ops.object.delete({'selected_objects': [obj for obj in bpy.data.objects]}, use_global=True)
-            
+
             bpy.ops.import_scene.fbx(
-                filepath=str(filepath),
-                automatic_bone_orientation=True,
-                axis_forward='-Y',
-                axis_up = 'Z'
+                filepath=str(filepath)
+                # automatic_bone_orientation=True,
+                # axis_forward='-Y',
+                # axis_up = 'Z'
             )
 
-            armature = bpy.context.scene.objects['armature']
+            armature_name = 'Armature'
+
+            armature = bpy.context.scene.objects[armature_name]
 
             for child in armature.children:
                 child.hide_set(state=True)
 
             if not armature:
                 print('Something is wrong with {}'.format(filepath))
-                break 
+                break
 
-            bpy.data.objects['armature'].select_set(state=True)
+            bpy.data.objects[armature_name].select_set(state=True)
             PinAnimation(bpy.context, armature).run()
-            
+
             current_action = list(bpy.data.actions)[-1]
 
             current_action.name = filepath.stem
@@ -246,12 +254,13 @@ class PinBatchAnimation():
                 filepath=str(self.batch_filepath_dst / filepath.name),
                 object_types={'ARMATURE'},
                 use_selection=True,
-                use_mesh_modifiers=True,
-                add_leaf_bones=False,
-                axis_forward='-Y',
-                axis_up = 'Z'
+                add_leaf_bones=False
+                # These screw up the import as of UE4.23
+                # axis_forward='-Y',
+                # axis_up = 'Z'
             )
-            
+
             bpy.ops.wm.save_as_mainfile(filepath=str(self.batch_filepath_bln / (filepath.stem + '.blend')))
 
+        bpy.ops.wm.read_homefile(app_template="")
         return {'FINISHED'}
