@@ -69,12 +69,11 @@ class PinAnimation:
         self.new_pelvis_locs = []
         self.new_pelvis_rots = []
 
-        has_root_bone = self.armature.pose.bones[0].name in ('Root', 'root')
-        if not has_root_bone:
+        if not self.armature.pose.bones[0].name in ('root', 'Root'):
             self.add_root_bone()
 
-        self.armature.pose.bones[0].name = 'Root'
-        self.armature.pose.bones['Root'].rotation_mode = 'QUATERNION'
+        self.armature.pose.bones[0].name = 'root'
+        self.armature.pose.bones['root'].rotation_mode = 'QUATERNION'
         self.armature.pose.bones['pelvis'].rotation_mode = 'QUATERNION'
         self.init_pelvis_loc = self.armature.pose.bones['pelvis'].matrix.copy().to_translation()
 
@@ -100,12 +99,11 @@ class PinAnimation:
          coord.z,
          -coord.y))
 
-
     def add_root_bone(self):
         """Add a root bone to the armature."""
         bpy.ops.object.mode_set(mode='EDIT')
-        bpy.ops.armature.bone_primitive_add(name='Root')
-        root_edit = self.armature.data.edit_bones['Root']
+        bpy.ops.armature.bone_primitive_add(name='root')
+        root_edit = self.armature.data.edit_bones['root']
         pelvis_edit = self.armature.data.edit_bones['pelvis']
         root_edit.head = Vector((0, 0, 0))
         root_edit.tail = pelvis_edit.head
@@ -131,7 +129,7 @@ class PinAnimation:
 
     def set_root_to_origin(self):
         bpy.ops.object.mode_set(mode='EDIT')
-        root_edit = self.armature.data.edit_bones['Root']
+        root_edit = self.armature.data.edit_bones['root']
         root_edit.head = Vector((0, 0, 0))
         tail_z = 0.5
         root_edit.tail = Vector((0, 0, tail_z))
