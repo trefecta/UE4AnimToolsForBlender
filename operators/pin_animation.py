@@ -7,9 +7,12 @@ from ..properties import Scene_UE4AnimToolProperties as UE4AnimToolProperties
 
 class UE4ANIMTOOLS_OT_PinAnimation(bpy.types.Operator):
     bl_idname = 'ue4animtools.pin_animation'
-    bl_label = 'Apply to selected armature'
+    bl_label = 'Apply to Selected Armature'
     bl_category = 'UE4 Animation'
-    bl_description = """Translates armature animation from entire armature object to the `pelvis` bone, pinning armature object to origin."""
+    bl_description =   (
+        "Translates armature animation from the object root to the `pelvis` bone,"
+        "pinning the armature root of the armature object to origin."
+    )
 
     @classmethod
     def poll(cls, context):
@@ -26,14 +29,14 @@ class UE4ANIMTOOLS_OT_PinBatchFBXOperator(bpy.types.Operator):
     bl_idname = "ue4animtools.pin_batch_animation"
     bl_label = "Apply to FBX armatures in 'Source'"
     bl_category = 'UE4 Animation'
-    bl_description = """
-Imports `*.fbx` files from a specified directory, pinning the root to the origin.
-
-The file is saved as a `*.blend` in a `./Blender` sibling directory or an optionally specified directory,
-exporting a new `*.fbx` to a `./UE4` sibling directory or an optionally specified directory.
-
-Directories are created if they do not exist.
-    """
+    bl_description =   (
+        "Imports `*.fbx` files from a specified directory,"
+        "translating the armature animation from the object root motion to the `pelvis` bone"
+        "before pinning the armature root to the origin.\n"
+        "The file is saved as a `*.blend` in a `./Blender` sibling directory be default, or an optionally specified directory,"
+        "exporting a new `*.fbx` to a `./UE4` sibling directory by default, or an optionally specified directory.\n"
+        "These directories are created if they do not exist."
+    )
 
     @classmethod
     def poll(cls, context):
