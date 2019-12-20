@@ -88,10 +88,6 @@ class PinAnimation:
         self.ctx.scene.frame_set(self.start_frame)
         return {'FINISHED'}
 
-    def to_degrees(self, rot):
-        """Convert a Euler from radians to degrees."""
-        return Vector([math.degrees(a) for a in rot])
-
     def translate_vector_axes(self, coord):
         """Convert between world and pose space."""
         return Vector((
