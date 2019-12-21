@@ -73,9 +73,12 @@ class PinAnimation:
             self.add_root_bone()
 
         self.armature.pose.bones[0].name = 'root'
-        self.armature.pose.bones['root'].rotation_mode = 'QUATERNION'
-        self.armature.pose.bones['pelvis'].rotation_mode = 'QUATERNION'
-        self.init_pelvis_loc = self.armature.pose.bones['pelvis'].matrix.copy().to_translation()
+
+        self.root_pose_bone = self.armature.pose.bones['root']
+        self.pelvis_pose_bone = self.armature.pose.bones['pelvis']
+
+        self.root_pose_bone.rotation_mode = 'QUATERNION'
+        self.pelvis_pose_bone.rotation_mode = 'QUATERNION'
 
     def run(self):
         self.remove_end_bones()
@@ -151,35 +154,32 @@ class PinAnimation:
         self.armature.update_from_editmode()
 
     def calculate_parameters(self, frame):
-        pelvis_pose = self.armature.pose.bones['pelvis']
-        pelvis_pose.bone.select = True
+        self.pelvis_pose_bone.bone.select = True
         current_armature_basis = self.armature.matrix_basis.copy()
 
         wrt_current_origin = lambda x: current_armature_basis @ x
 
-        new_pelvis_rot = wrt_current_origin(pelvis_pose.matrix.copy()).to_quaternion()
-        new_pelvis_rot.rotate(pelvis_pose.matrix.to_quaternion().conjugated())
+        new_pelvis_rot = wrt_current_origin(self.pelvis_pose_bone.matrix.copy()).to_quaternion()
+        new_pelvis_rot.rotate(self.pelvis_pose_bone.matrix.to_quaternion().conjugated())
 
         # Get the difference between the world space and the scaled pose space
         # this is the offset
-        pose_pelvis_loc = pelvis_pose.matrix.to_translation()
+        pose_pelvis_loc = self.pelvis_pose_bone.matrix.to_translation()
         current_pelvis_loc = wrt_current_origin(pose_pelvis_loc)
-        new_pelvis_loc = (current_pelvis_loc - (pelvis_pose.matrix.to_translation() / self.scaling))
+        new_pelvis_loc = (current_pelvis_loc - (self.pelvis_pose_bone.matrix.to_translation() / self.scaling))
 
         self.new_pelvis_rots.append(new_pelvis_rot)
         self.new_pelvis_locs.append(self.translate_vector_axes(new_pelvis_loc) * self.scaling)
 
     def update_pelvis_location(self, frame):
-        pelvis_pose = self.armature.pose.bones['pelvis']
-        pelvis_pose.bone.select = True
-        pelvis_pose.location = self.new_pelvis_locs[frame]
-        pelvis_pose.keyframe_insert(data_path='location', frame=frame)
+        self.pelvis_pose_bone.bone.select = True
+        self.pelvis_pose_bone.location = self.new_pelvis_locs[frame]
+        self.pelvis_pose_bone.keyframe_insert(data_path='location', frame=frame)
 
     def update_pelvis_rotation(self, frame):
-        pelvis_pose = self.armature.pose.bones['pelvis']
-        pelvis_pose.bone.select = True
-        pelvis_pose.rotation_quaternion = self.new_pelvis_rots[frame]
-        pelvis_pose.keyframe_insert(data_path='rotation_quaternion', frame=frame)
+        self.pelvis_pose_bone.bone.select = True
+        self.pelvis_pose_bone.rotation_quaternion = self.new_pelvis_rots[frame]
+        self.pelvis_pose_bone.keyframe_insert(data_path='rotation_quaternion', frame=frame)
 
     def align_obj(self, frame):
         self.update_pelvis_rotation(frame)
